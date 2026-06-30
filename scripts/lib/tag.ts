@@ -3,7 +3,7 @@
  *
  * tags are v<MAJOR>.<MINOR>.<PATCH>, where MAJOR.MINOR has to match the
  * Nihaopay API version this repo documents (currently 1.2). both
- * validate-tag.ts and build-content-tarball.ts go through parseTag, so the
+ * validate-tag.ts and build-release.ts go through parseTag, so the
  * format check and the version-line check only live in one place.
  */
 
