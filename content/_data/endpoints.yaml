@@ -1,0 +1,261 @@
+# endpoint catalog for Nihaopay v1.2. 38 endpoints — Appendix A of the spec
+# plus later additions (MuskPay CardPay, callback endpoints). keep the count
+# in sync with the entries below, it's a 1:1 mapping to the type: endpoint
+# content pages.
+#
+# each entry maps one endpoint to its content doc_id. the linter checks every
+# type: endpoint markdown file against this catalog — method, path, and
+# product all have to match.
+#
+# discriminator tells apart shared paths — §7.3.1 and §7.4 both POST to
+# /v1.2/merchantqrcode but they're different products (UnionPay/WeChat vs
+# Alipay).
+#
+# amount_unit defaults to currency_minor_unit; customs declaration uses
+# rmb_fen (RMB cents, see §4.3.3 and §8.1).
+
+endpoints:
+  # SecurePay, §5
+  - doc_id: payment-products/securepay/standard
+    method: POST
+    path: /v1.2/transactions/securepay
+    product: securepay
+    summary: "Redirect-based payment for browsers. HTML form-post by default; JSON when response_format=JSON."
+
+  - doc_id: payment-products/securepay/qrcode
+    method: POST
+    path: /v1.2/transactions/qrcode
+    product: securepay
+    summary: "Generate a QR code URL the customer scans with WeChat or UnionPay."
+
+  - doc_id: payment-products/securepay/in-app
+    method: POST
+    path: /v1.2/transactions/apppay
+    product: securepay
+    summary: "In-app payment returning orderInfo for the vendor SDK or a redirectUrl for WebView."
+
+  - doc_id: payment-products/securepay/alipay-a-plus
+    method: POST
+    path: /v1.2/transactions/aplus
+    product: securepay
+    summary: "Alipay A+ multi-wallet payment (AlipayHK, GCash, DANA, KaKaoPay, TNG, TrueMoney, ALIPAY_CN)."
+
+  - doc_id: payment-products/securepay/wechat-miniprogram
+    method: POST
+    path: /v1.2/transactions/micropay
+    product: securepay
+    summary: "WeChat Mini-Program payment. Returns a client-side payload for wx.requestPayment()."
+
+  - doc_id: payment-products/securepay/paypal-acdc
+    method: POST
+    path: /v1.2/transactions/paypal/capture/{transaction_id}
+    product: securepay
+    summary: "Capture a PayPal ACDC order created via the PayPal JS SDK pre-order flow."
+
+  # in-store, §7
+  - doc_id: payment-products/in-store/scan-qrcode
+    method: POST
+    path: /v1.2/transactions/scanqrcode
+    product: in-store
+    summary: "Merchant-scans-customer flow. Merchant scans a QR/barcode from the customer's phone."
+
+  - doc_id: payment-products/in-store/show-qrcode
+    method: POST
+    path: /v1.2/transactions/showqrcode
+    product: in-store
+    summary: "Customer-scans-merchant flow. Merchant displays a dynamic QR; customer scans to pay."
+
+  - doc_id: payment-products/in-store/static-omni-qrcode-create
+    method: POST
+    path: /v1.2/merchantqrcode
+    product: in-store
+    discriminator:
+      param: vendor
+      value: "unionpay|wechatpay"
+    summary: "Create a static QR code for a merchant store (WeChat / UnionPay). Print + post in store."
+
+  - doc_id: payment-products/in-store/static-omni-qrcode-payment
+    method: POST
+    path: /v1.2/transactions/staticqrcode
+    product: in-store
+    summary: "Static QR code payment — invoked when a customer scans a printed static QR."
+
+  - doc_id: payment-products/in-store/static-alipay-qrcode
+    method: POST
+    path: /v1.2/merchantqrcode
+    product: in-store
+    discriminator:
+      param: vendor
+      value: "alipay"
+    summary: "Create a static QR code specifically for AliPay (different vendor=alipay path through same endpoint)."
+
+  # customs declaration, §8 — amounts in rmb_fen
+  - doc_id: customs-declaration/declaration
+    method: POST
+    path: /v1.2/customs/declaration/{transaction_id}
+    product: customs
+    amount_unit: rmb_fen
+    summary: "Declare a transaction to Chinese customs. Amounts in RMB fen (cents)."
+
+  - doc_id: customs-declaration/declaration-query
+    method: GET
+    path: /v1.2/customs/{request_no}
+    product: customs
+    summary: "Query the status of a customs declaration by request_no."
+
+  - doc_id: customs-declaration/redeclaration
+    method: POST
+    path: /v1.2/customs/redeclaration/{request_no}
+    product: customs
+    summary: "Resubmit a failed customs declaration for the same request_no."
+
+  # auto debit, §9 — WeChat only, contract-based recurring deduction
+  - doc_id: payment-products/auto-debit/signing
+    method: POST
+    path: /v1.2/contract/sign
+    product: auto-debit
+    summary: "Sign an auto-debit contract. Returns signUrl (WEB/H5) or signId (APP/Mini-Program)."
+
+  - doc_id: payment-products/auto-debit/termination
+    method: POST
+    path: /v1.2/contract/terminate
+    product: auto-debit
+    summary: "Terminate an active auto-debit contract."
+
+  - doc_id: payment-products/auto-debit/contract-query
+    method: GET
+    path: /v1.2/contract/query
+    product: auto-debit
+    summary: "Query the status of an auto-debit contract."
+
+  - doc_id: payment-products/auto-debit/initiate-deduction
+    method: POST
+    path: /v1.2/transactions/autodebit
+    product: auto-debit
+    summary: "Initiate a one-time deduction against a previously-signed auto-debit contract."
+
+  # profit sharing, §10 — one endpoint, multiple sharingType scenarios
+  - doc_id: payment-products/profit-sharing/apply
+    method: POST
+    path: /v1.2/sharing/apply
+    product: profit-sharing
+    summary: "Initiate profit sharing or reversal. Five scenarios distinguished by sharingType + splitMethod + relationTxnId."
+
+  - doc_id: payment-products/profit-sharing/query-config
+    method: POST
+    path: /v1.2/sharing/query
+    product: profit-sharing
+    summary: "Query existing profit-sharing configurations (global or per-order)."
+
+  - doc_id: payment-products/profit-sharing/query-result
+    method: POST
+    path: /v1.2/sharing/detail
+    product: profit-sharing
+    summary: "Query the execution result of a specific profit-sharing configuration."
+
+  - doc_id: payment-products/profit-sharing/cancel
+    method: POST
+    path: /v1.2/sharing/cancel
+    product: profit-sharing
+    summary: "Cancel a pending profit-sharing configuration. Successful orders cannot be cancelled (use reversal)."
+
+  # operations — refund, query, downloads, §11
+  - doc_id: operations/retrieve-securepay
+    method: GET
+    path: /v1.2/transactions/merchant/{reference}
+    product: operations
+    summary: "Retrieve a SecurePay transaction by merchant reference. (vs lookup-transaction which uses transaction_id)"
+
+  - doc_id: operations/lookup-transaction
+    method: GET
+    path: /v1.2/transactions/{transaction_id}
+    product: operations
+    summary: "Look up a transaction by Nihaopay transaction_id. SecurePay only. (vs retrieve-securepay which uses reference)"
+
+  - doc_id: operations/refund
+    method: POST
+    path: /v1.2/transactions/refund/{transaction_id}
+    product: operations
+    summary: "Issue a full or partial refund. Full refund: once per transaction. Partial: multiple until total amount reached."
+
+  - doc_id: operations/refund-query
+    method: GET
+    path: /v1.2/transactions/refunds/{transaction_id}/
+    product: operations
+    summary: "List all refunds against a transaction with statuses and timestamps. Note trailing slash in path."
+
+  - doc_id: operations/list-transactions
+    method: GET
+    path: /v1.2/transactions/
+    product: operations
+    summary: "Paginated transaction list. Filter by starting_after/ending_before (UTC timestamps). limit 1-100."
+
+  - doc_id: operations/exchange-rate
+    method: GET
+    path: /v1.2/exchangerate
+    product: operations
+    summary: "Daily exchange rate per currency + vendor. Updates 10:30 China time. Rate limited 1/min."
+
+  - doc_id: operations/download-transactions
+    method: GET
+    path: /v1.2/download/transactions
+    product: operations
+    summary: "CSV download of transactions for a date range. Max 10-day interval."
+
+  - doc_id: operations/download-billing
+    method: GET
+    path: /v1.2/billing
+    product: operations
+    summary: "CSV billing file download for reconciliation. Excludes closed/failed/cancelled transactions. Max 10-day interval."
+
+  # MuskPay CardPay — base URL is api.muskpay.io, not api.nihaopay.com. USD
+  # only, card vendors are Visa/Master/JCB/Amex/Discover. IPN handler has to
+  # print the literal string "ok", HTTP 200 alone isn't enough.
+  - doc_id: payment-products/cardpay/charge
+    method: POST
+    path: /v1.2/transactions/cardpay
+    product: cardpay
+    summary: "Direct credit-card charge with RSA-OAEP-encrypted card data. Requires merchant PCI compliance. MuskPay host."
+
+  - doc_id: payment-products/cardpay/authorize
+    method: POST
+    path: /v1.2/transactions/auth
+    product: cardpay
+    summary: "Authorize a credit card without capturing funds. Must follow up with capture within 30 days or it auto-releases."
+
+  - doc_id: payment-products/cardpay/release
+    method: POST
+    path: /v1.2/transactions/release/{transaction_id}
+    product: cardpay
+    summary: "Release a previously-authorized credit-card transaction. Authorizations not captured within 30 days auto-release."
+
+  - doc_id: payment-products/cardpay/capture
+    method: POST
+    path: /v1.2/transactions/capture/{transaction_id}
+    product: cardpay
+    summary: "Capture funds against a previously-authorized credit-card transaction. Capture amount cannot exceed the authorized amount."
+
+  - doc_id: payment-products/cardpay/gateway-checkout
+    method: POST
+    path: /v1.2/cardpay/checkout
+    product: cardpay
+    summary: "Gateway-hosted credit-card payment — redirect-based, non-PCI alternative to direct CardPay. Returns redirect_url; outcome via IPN."
+
+  # account / withdrawal, §12
+  - doc_id: account-settlement/balance
+    method: GET
+    path: /v1.2/accounts
+    product: account
+    summary: "Inquiry account balance — returns an array of accounts (one per currency)."
+
+  - doc_id: account-settlement/withdrawal-history
+    method: GET
+    path: /v1.2/withdrawal/history
+    product: account
+    summary: "List withdrawal history for a date range (YYYYMMDD)."
+
+  - doc_id: account-settlement/withdrawal-details
+    method: GET
+    path: /v1.2/withdrawal/detail/{withdrawal_id}
+    product: account
+    summary: "Withdrawal details by withdrawal_id. Returns CSV (unusual for a 'detail' endpoint)."

@@ -1,0 +1,272 @@
+# enum reference for Nihaopay v1.2. enum values shift by endpoint context,
+# e.g.:
+#   - status is success|failure|pending in most endpoints, but
+#     Signed|Terminated|Processing|FAIL in §9.3.3 contracts, and
+#     processing|completed in §12.2 withdrawal.
+#   - vendor accepts paypal/PayPal in §5.1 but only alipay/wechatpay/unionpay
+#     elsewhere.
+#   - terminal is ONLINE/WAP in §5.1, adds APP/MICRO in §5.4 Alipay A+.
+#
+# this file is the one place that tracks what's valid where, so content
+# authoring has something to reference and the linter can check enum values
+# against it.
+
+# status — transaction status
+status:
+  default:
+    values: [success, failure, pending]
+    used_by:
+      - operations/retrieve-securepay
+      - operations/lookup-transaction
+      - operations/refund
+      - operations/list-transactions
+      - payment-products/securepay/*
+      - payment-products/in-store/scan-qrcode
+      - payment-products/auto-debit/initiate-deduction
+      - customs-declaration/*
+    notes: |
+      Most common form. `success` is the SecurePay terminal state per §5.1.
+
+  refund_query:
+    values: [success, failure, pending, closed]
+    used_by:
+      - operations/refund-query
+    notes: |
+      §11.4 adds `closed` for completed-and-locked transactions.
+
+  contract:
+    values: [Signed, Terminated, Processing, FAIL]
+    used_by:
+      - payment-products/auto-debit/contract-query
+      - payment-products/auto-debit/signing (notification)
+    notes: |
+      §9.3.3 — Auto Debit contract status. Note mixed casing
+      (capitalized except FAIL). Not interchangeable with default status.
+
+  withdrawal:
+    values: [processing, completed]
+    used_by:
+      - account-settlement/withdrawal-history
+    notes: |
+      §12.2 — withdrawal-specific. Subset of default but uses 'completed'
+      rather than 'success'.
+
+  profit_sharing_txn:
+    values: [SUCCESS, FAIL]
+    used_by:
+      - payment-products/profit-sharing/query-config (txnStatus)
+      - payment-products/profit-sharing/cancel (txnStatus)
+    notes: |
+      §10.8 / §10.10 — uppercase, abbreviated. Spec quirk.
+
+  profit_sharing_notif:
+    values: [SUCCESS, FAIL]
+    used_by:
+      - payment-products/profit-sharing/sharing-callback (sharingStatus)
+    notes: |
+      §10.11 callback — same shape as txnStatus.
+
+# vendor — payment vendor / channel
+vendor:
+  securepay:
+    values: [unionpay, alipay, wechatpay, PayPal]
+    used_by:
+      - payment-products/securepay/standard
+    notes: |
+      §5.1 — note `PayPal` is capitalized; other endpoints use lowercase.
+      Spec inconsistency: §4.3.6 mentions PayPal lowercase as a possibility.
+
+  qrcode:
+    values: [unionpay, wechatpay]
+    used_by:
+      - payment-products/securepay/qrcode
+    notes: |
+      §5.2 — does NOT include alipay.
+
+  in_app:
+    values: [alipay, wechatpay, unionpay]
+    used_by:
+      - payment-products/securepay/in-app
+    notes: |
+      §5.3 — standard vendor set; lowercase.
+
+  scan_qrcode:
+    values: [alipay, unionpay, wechatpay]
+    used_by:
+      - payment-products/in-store/scan-qrcode
+
+  show_qrcode:
+    values: [alipay, unionpay, wechatpay]
+    used_by:
+      - payment-products/in-store/show-qrcode
+
+  static_qrcode:
+    values: [wechatpay, alipay]
+    used_by:
+      - payment-products/in-store/static-omni-qrcode-payment
+
+  static_alipay:
+    values: [alipay]
+    used_by:
+      - payment-products/in-store/static-alipay-qrcode
+    notes: |
+      §7.4 — only alipay.
+
+  auto_debit:
+    values: [wechatpay]
+    used_by:
+      - payment-products/auto-debit/*
+    notes: |
+      §9.2 rule 4 — auto debit currently only supports WeChat Pay.
+
+  exchange_rate:
+    values: [alipay, wechatpay, unionpay]
+    used_by:
+      - operations/exchange-rate
+
+  transaction_response:
+    values: [unionpay, alipay, wechatpay, alipayhk]
+    used_by:
+      - operations/retrieve-securepay (response)
+      - operations/lookup-transaction (response)
+      - operations/refund-query (response)
+    notes: |
+      Response-side. Adds `alipayhk`; case sensitivity not specified.
+
+# terminal — submission context
+terminal:
+  default:
+    values: [ONLINE, WAP]
+    used_by:
+      - payment-products/securepay/standard
+    default_value: ONLINE
+
+  alipay_a_plus:
+    values: [ONLINE, WAP, APP, MICRO]
+    used_by:
+      - payment-products/securepay/alipay-a-plus
+    default_value: ONLINE
+    notes: |
+      §5.4 — adds APP and MICRO.
+
+  auto_debit_platform:
+    # §9.3.1 calls this field platform, not terminal — same concept.
+    values: [WEB, H5, APP, MINI_APP, JSAPI]
+    used_by:
+      - payment-products/auto-debit/signing
+    notes: |
+      §9.3.1 — field is named `platform`, not `terminal`. Sometimes called
+      `terminal` informally.
+
+# ostype
+ostype:
+  values: [ANDROID, IOS]
+  used_by:
+    - payment-products/securepay/in-app  # required
+    - payment-products/securepay/alipay-a-plus  # required when terminal=WAP/APP/MICRO
+
+# wallet, §5.4 Alipay A+
+wallet:
+  values:
+    - ALIPAY_CN
+    - ALIPAY_HK
+    - TRUEMONEY
+    - TNG
+    - GCASH
+    - DANA
+    - KAKAOPAY
+    - CONNECT_WALLET
+  used_by:
+    - payment-products/securepay/alipay-a-plus
+  default_value: CONNECT_WALLET
+  notes: |
+    §5.4 — CONNECT_WALLET surfaces all wallets for user selection.
+
+# currency — supported currency codes
+currency:
+  full_set:
+    values: [USD, JPY, HKD, EUR, CAD, GBP, SGD, AUD]
+    used_by:
+      - "all (general)"
+    notes: |
+      §4.3.2 lists 8 supported currencies.
+
+  exchange_rate_subset:
+    values: [USD, JPY, HKD, GBP, EUR]
+    used_by:
+      - operations/exchange-rate
+    notes: |
+      §11.6 — only 5 of the 8 are supported for exchange-rate queries.
+      Missing: CAD, SGD, AUD.
+
+  minor_unit:
+    # currencies with no minor unit — smallest unit is the base unit.
+    base_unit_currencies: [JPY]
+    notes: |
+      §4.3.2 minor unit column. Affects amount semantics and splitValue
+      semantics in profit sharing (§10.5).
+
+# sharingType, §10.6
+sharing_type:
+  values:
+    - { value: 0, meaning: "Profit Sharing" }
+    - { value: 2, meaning: "Reversal of Profit Sharing" }
+  notes: |
+    §10.6 — note: value 1 is reserved/unused.
+
+# splitMethod, §10.6
+split_method:
+  values:
+    - { value: 0, meaning: "Percentage-based" }
+    - { value: 1, meaning: "Fixed Amount" }
+  notes: |
+    §10.6 — `splitValue` semantics depend on this field.
+    - splitMethod=0: splitValue is percentage with 1/10000 precision
+                    (splitValue=1023 means 10.23%)
+    - splitMethod=1: splitValue is amount in currency base unit
+                    (splitValue=1023 USD means 10.23 USD)
+
+# feeFrom / baseFrom, §10.6
+fee_from:
+  values:
+    - { value: 0, meaning: "Deduct fee from the transaction" }
+    - { value: 1, meaning: "Deduct from source account" }
+  default_value: 0
+
+base_from:
+  values:
+    - { value: 0, meaning: "Settlement amount of original transaction order" }
+    - { value: 1, meaning: "Settlement amount of original sharing order" }
+    - { value: 2, meaning: "Amount of original transaction order" }
+  default_value: 0
+  notes: |
+    §10.6 — basis for reversal calculations.
+
+# cert_type, §8.1 customs
+cert_type:
+  values: [ID_CARD]
+  default_value: ID_CARD
+  notes: |
+    §8.1 — only Chinese mainland ID is supported in v1.2.
+
+# cert_check, §8.1 customs response — duplicated in customs.yaml
+cert_check:
+  values: [SAME, DIFFERENT, UNCHECKED]
+  notes: |
+    See customs.yaml for descriptions. Duplicated here for completeness.
+
+# type — transaction type
+transaction_type:
+  values: [charge, authorization, capture]
+  used_by:
+    - operations/retrieve-securepay (response)
+    - operations/lookup-transaction (response)
+    - operations/list-transactions (response)
+    - operations/refund-query (response)
+
+# terminateMode, §9.3.3 / §9.4
+terminate_mode:
+  values: [USER, MERCHANT, PLATFORM]
+  used_by:
+    - payment-products/auto-debit/contract-query (response)
+    - payment-products/auto-debit/signing (notification, on termination)

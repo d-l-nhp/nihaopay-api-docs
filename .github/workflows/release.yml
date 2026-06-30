@@ -1,0 +1,42 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+
+      - run: pnpm install --frozen-lockfile
+
+      # gate: tag has to be well-formed and on the documented API line, content
+      # has to be green. mirrors lint.yml so the tarball only ever ships
+      # parsed-and-linted content.
+      - run: pnpm validate-tag
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm lint:content
+
+      - name: Build content tarball
+        id: tarball
+        run: pnpm build-tarball
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ASSET: ${{ steps.tarball.outputs.path }}
+          CHECKSUM: ${{ steps.tarball.outputs.checksum }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "$ASSET" "$CHECKSUM" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes

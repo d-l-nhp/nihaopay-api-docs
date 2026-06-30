@@ -1,0 +1,378 @@
+# error-code reference for Nihaopay v1.2, from spec §14.2 (main list) and
+# §8.4 (customs additions).
+#
+# fields:
+#   code         HTTP-status + label, used as the primary key
+#   http_status  HTTP status integer
+#   label        2-3 digit string, kept as a string so leading zeros survive
+#   message      human-readable cause, from the spec
+#   category     general (applies everywhere) or customs (declaration only)
+#   notes        optional context, added during editorial review
+#
+# 200-00 ("Success") shows up in §14.2 even though it's not an error — kept
+# for spec fidelity, treat it as non-error.
+#
+# the customs subset (§8.4) duplicates 12 codes from the main set and adds
+# 10 new ones (labels 100-109). only the new ones are category=customs below;
+# the duplicates stay category=general.
+
+codes:
+  # general set, §14.2
+
+  - code: "200-00"
+    http_status: 200
+    label: "00"
+    message: "Success"
+    category: general
+    notes: |
+      Success state from §14.2. Included for completeness; not an error.
+
+  - code: "402-01"
+    http_status: 402
+    label: "01"
+    message: "Transaction failed. Please try again."
+    category: general
+
+  - code: "402-02"
+    http_status: 402
+    label: "02"
+    message: "Cardholder input an incorrect card number."
+    category: general
+
+  - code: "402-03"
+    http_status: 402
+    label: "03"
+    message: "Cardholder's issuing bank prevented the transaction."
+    category: general
+
+  - code: "402-06"
+    http_status: 402
+    label: "06"
+    message: "Customer input an expired card number."
+    category: general
+
+  - code: "402-11"
+    http_status: 402
+    label: "11"
+    message: "Customer has insufficient funds available."
+    category: general
+
+  - code: "402-14"
+    http_status: 402
+    label: "14"
+    message: "Cardholder input an incorrect expiration date."
+    category: general
+
+  - code: "402-15"
+    http_status: 402
+    label: "15"
+    message: "Cardholder authentication failed. Please verify cardholder's information."
+    category: general
+
+  - code: "402-21"
+    http_status: 402
+    label: "21"
+    message: "Cardholder authentication failed. Please verify cardholder's information."
+    category: general
+    notes: |
+      Spec quirk: same message as 402-15. Both codes appear in §14.2 distinctly.
+      Reserved for future divergence; treat as functionally equivalent today.
+
+  - code: "402-22"
+    http_status: 402
+    label: "22"
+    message: "Card state is incorrect."
+    category: general
+
+  - code: "402-30"
+    http_status: 402
+    label: "30"
+    message: "The amount exceeds transaction limit placed."
+    category: general
+
+  - code: "400-31"
+    http_status: 400
+    label: "31"
+    message: "Transaction reference number must be unique. Please re-submit."
+    category: general
+
+  - code: "400-32"
+    http_status: 400
+    label: "32"
+    message: "This payment channel is restricted. Please contact NihaoPay customer service."
+    category: general
+
+  - code: "409-33"
+    http_status: 409
+    label: "33"
+    message: "Transaction failed. Information submitted in a repeat transaction must match the original attempted transaction exactly."
+    category: general
+
+  - code: "402-36"
+    http_status: 402
+    label: "36"
+    message: "Transaction exceeds the cardholder's credit limit."
+    category: general
+
+  - code: "429-39"
+    http_status: 429
+    label: "39"
+    message: "Too many transactions attempts by cardholder."
+    category: general
+
+  - code: "402-56"
+    http_status: 402
+    label: "56"
+    message: "Cardholder's chosen payment card is not supported in this Gateway."
+    category: general
+
+  - code: "402-57"
+    http_status: 402
+    label: "57"
+    message: "Cardholder has not activated online payments with their issuing bank."
+    category: general
+
+  - code: "404-59"
+    http_status: 404
+    label: "59"
+    message: "Failed. Transaction have refund or chargeback."
+    category: general
+
+  - code: "404-60"
+    http_status: 404
+    label: "60"
+    message: "Transaction has been cleared, please request refund."
+    category: general
+
+  - code: "402-61"
+    http_status: 402
+    label: "61"
+    message: "Transaction not found."
+    category: general
+
+  - code: "402-62"
+    http_status: 402
+    label: "62"
+    message: "Transaction is not within the acceptance time range."
+    category: general
+
+  - code: "402-63"
+    http_status: 402
+    label: "63"
+    message: "The original transaction failed. You cannot refund, cancel, capture, or release an unsuccessful transaction."
+    category: general
+
+  - code: "409-64"
+    http_status: 409
+    label: "64"
+    message: "Refund or capture currency does not match the original transaction currency."
+    category: general
+
+  - code: "409-65"
+    http_status: 409
+    label: "65"
+    message: "Transaction has previously been cancelled."
+    category: general
+
+  - code: "409-66"
+    http_status: 409
+    label: "66"
+    message: "Failed to refund transaction. Transaction has previously been fully refunded."
+    category: general
+
+  - code: "402-67"
+    http_status: 402
+    label: "67"
+    message: "Failed to refund transaction. Refund amount exceeds original transaction amount or remaining transaction balance."
+    category: general
+
+  - code: "402-68"
+    http_status: 402
+    label: "68"
+    message: "Failed to capture transaction. Transaction has previously been released."
+    category: general
+
+  - code: "402-69"
+    http_status: 402
+    label: "69"
+    message: "Failed to capture transaction. Transaction has previously been captured."
+    category: general
+
+  - code: "402-70"
+    http_status: 402
+    label: "70"
+    message: "Failed to capture transaction. Capture amount exceeds authorization amount."
+    category: general
+
+  - code: "402-71"
+    http_status: 402
+    label: "71"
+    message: "Buyer not exist or buyer account info error"
+    category: general
+
+  - code: "402-72"
+    http_status: 402
+    label: "72"
+    message: "Transaction amount is exceed the limit"
+    category: general
+
+  - code: "500-81"
+    http_status: 500
+    label: "81"
+    message: "Merchant config error"
+    category: general
+
+  - code: "500-82"
+    http_status: 500
+    label: "82"
+    message: "Merchant unavailable"
+    category: general
+
+  - code: "500-83"
+    http_status: 500
+    label: "83"
+    message: "QRcode has expired"
+    category: general
+
+  - code: "500-84"
+    http_status: 500
+    label: "84"
+    message: "Service is not activated for this account"
+    category: general
+
+  - code: "402-86"
+    http_status: 402
+    label: "86"
+    message: "Withdrawal amount exceeds account balance"
+    category: general
+
+  - code: "402-87"
+    http_status: 402
+    label: "87"
+    message: "Withdrawal amount less than the minimum withdrawal amount"
+    category: general
+
+  - code: "402-88"
+    http_status: 402
+    label: "88"
+    message: "Invalid application, it's only available for manually withdrawal merchant"
+    category: general
+
+  - code: "400-90"
+    http_status: 400
+    label: "90"
+    message: "The field not valid."
+    category: general
+
+  - code: "500-91"
+    http_status: 500
+    label: "91"
+    message: "Signature error"
+    category: general
+
+  - code: "500-92"
+    http_status: 500
+    label: "92"
+    message: "The {0} field is required."
+    category: general
+    notes: |
+      Format string — `{0}` is replaced by the actual field name at runtime.
+
+  - code: "404-93"
+    http_status: 404
+    label: "93"
+    message: "The Exchange rate not found."
+    category: general
+
+  - code: "500-96"
+    http_status: 500
+    label: "96"
+    message: "Timeout"
+    category: general
+
+  - code: "500-97"
+    http_status: 500
+    label: "97"
+    message: "Inner error"
+    category: general
+
+  - code: "500-98"
+    http_status: 500
+    label: "98"
+    message: "Vendor error"
+    category: general
+
+  - code: "500-99"
+    http_status: 500
+    label: "99"
+    message: "System error"
+    category: general
+
+  - code: "401-301"
+    http_status: 401
+    label: "301"
+    message: "Invalid merchant credentials provided"
+    category: general
+
+  # customs additions, §8.4 — labels 100-109. the 12 codes shared with §14.2
+  # aren't repeated here, they stay category=general above.
+
+  - code: "402-100"
+    http_status: 402
+    label: "100"
+    message: "Transaction retransmission fail, please try it after 5 minutes."
+    category: customs
+
+  - code: "402-101"
+    http_status: 402
+    label: "101"
+    message: "Customs not supported."
+    category: customs
+
+  - code: "402-102"
+    http_status: 402
+    label: "102"
+    message: "Customs information changed."
+    category: customs
+
+  - code: "402-103"
+    http_status: 402
+    label: "103"
+    message: "Certification not correct."
+    category: customs
+
+  - code: "402-104"
+    http_status: 402
+    label: "104"
+    message: "Split amount not correct."
+    category: customs
+
+  - code: "402-105"
+    http_status: 402
+    label: "105"
+    message: "Can not be modified as it is on declaration."
+    category: customs
+
+  - code: "402-106"
+    http_status: 402
+    label: "106"
+    message: "Same customs declare once."
+    category: customs
+
+  - code: "402-107"
+    http_status: 402
+    label: "107"
+    message: "Your request has been submitted, please confirm that it has taken effect."
+    category: customs
+
+  - code: "402-108"
+    http_status: 402
+    label: "108"
+    message: "The original customs does not exist."
+    category: customs
+
+  - code: "402-109"
+    http_status: 402
+    label: "109"
+    message: "The declaration is not allowed for refunded orders."
+    category: customs
