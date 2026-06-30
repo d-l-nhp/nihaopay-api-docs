@@ -1,0 +1,138 @@
+# customs reference for Nihaopay v1.2 declaration API, from spec §8.1.
+#
+# the spec has two tables that disagree:
+#   1. "acceptable customs values" — 15 enum values, includes the typo TIANJING
+#   2. "customs code table" — 8 entries with registration codes, uses TIANJIN
+#
+# we go with the enum values as written and flag the mismatches in
+# spec_notes. editorial review should reconcile this with Nihaopay.
+
+# normalized customs enum, key as it appears in API requests.
+# registration_code comes from the "customs code table", null when the spec
+# doesn't provide one.
+customs:
+  - key: ZONGSHU
+    display_name: "General Administration of Customs"
+    registration_code: "31222699S7"
+
+  - key: BEIJING
+    display_name: "Beijing Customs"
+    registration_code: null
+    spec_notes: |
+      Listed in the enum but missing from the "Customs code table" in §8.1.
+
+  - key: HANGZHOU
+    display_name: "Hangzhou Customs"
+    registration_code: "ZF14021901"
+
+  - key: NINGBO
+    display_name: "Ningbo Customs"
+    registration_code: "31222699S7"
+
+  - key: GUANGZHOU
+    display_name: "Guangzhou Customs"
+    registration_code: "C000010000416158"
+
+  - key: GUANGZHOU_HUANGPU
+    display_name: "Guangzhou Huangpu Customs"
+    registration_code: null
+    spec_notes: |
+      Listed in the enum; missing from the code table.
+
+  - key: SHENZHEN
+    display_name: "Shenzhen Customs"
+    registration_code: null
+    spec_notes: |
+      Listed in the enum; missing from the code table.
+
+  - key: NANSHA
+    display_name: "Nansha Guo Jian"
+    registration_code: null
+    spec_notes: |
+      Listed in the enum as "Nansha Guo Jian"; missing from the code table.
+
+  - key: ZHENGZHOU
+    display_name: "Zhengzhou Customs (Henan bonded logistics center)"
+    registration_code: "31222699S7"
+
+  - key: XINZHENG
+    display_name: "Xinzheng comprehensive free trade zone (Airport)"
+    registration_code: "P460400005"
+
+  - key: CHONGQING
+    display_name: "Chongqing Customs"
+    registration_code: null
+    spec_notes: |
+      Listed in the enum; missing from the code table.
+
+  - key: SHANGHAI
+    display_name: "Shanghai Customs"
+    registration_code: "31222699S7"
+
+  - key: XIAN
+    display_name: "Xi'an Customs"
+    registration_code: null
+    spec_notes: |
+      Listed in the enum; missing from the code table.
+
+  # spec typo: the enum table says "TIANJING" (trailing G), the code table
+  # says "TIANJIN". going with TIANJING since that's what the enum table
+  # uses — see spec_notes for the conflict.
+  - key: TIANJING
+    display_name: "Tianjin Customs"
+    registration_code: "Q12150016000019"
+    aliases: [TIANJIN]
+    spec_notes: |
+      Source spec enum table lists this as TIANJING (trailing G); the code
+      table uses TIANJIN. We treat TIANJING as canonical and TIANJIN as an
+      alias. Confirm with Nihaopay tech_support@nihaopay.com which form the
+      API actually accepts before relying on this in production.
+
+  - key: XIAMEN
+    display_name: "Xiamen Customs"
+    registration_code: null
+    spec_notes: |
+      Listed in the enum; missing from the code table.
+
+# payment provider registrations, from §8.1.
+payment_provider_registrations:
+  - vendor: unionpay
+    name_zh: "中国银联股份有限公司"
+    name_en: "China UnionPay Co., Ltd."
+    code: "312228034U"
+
+  - vendor: wechatpay
+    name_zh: "财付通支付科技有限公司"
+    name_en: "Tenpay Payment Technology Co., Ltd."
+    code: "4403169D3W"
+
+  - vendor: alipay
+    name_zh: "支付宝(中国)网络技术有限公司"
+    name_en: "Alipay (China) Network Technology Co., Ltd."
+    code: null
+    spec_notes: |
+      §8.1 does not provide a registration code for Alipay.
+
+# ver_dept enum, from the §8.1 response. §8.1 only documents 0/1/2, but the
+# §8.3 sample response shows a 3 too.
+ver_dept:
+  - value: 0
+    meaning: "UnionPay"
+  - value: 1
+    meaning: "NetsUnion"
+  - value: 2
+    meaning: "Other"
+  - value: 3
+    meaning: "(observed but undocumented)"
+    spec_notes: |
+      Appears in §8.3 sample response but is not listed in the §8.1 enum.
+      Confirm with Nihaopay before treating as authoritative.
+
+# cert_check enum, from the §8.1 response.
+cert_check:
+  - value: SAME
+    meaning: "Purchaser/payer identity matched"
+  - value: DIFFERENT
+    meaning: "Purchaser/payer identity not matched"
+  - value: UNCHECKED
+    meaning: "No purchaser identification provided, or not checked"
