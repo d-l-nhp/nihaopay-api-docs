@@ -10,7 +10,7 @@
     "lint:fix": "biome check --write",
     "lint:content": "tsx scripts/lint-content.ts",
     "validate-tag": "tsx scripts/validate-tag.ts",
-    "build-tarball": "tsx scripts/build-content-tarball.ts",
+    "build-tarball": "tsx scripts/build-release.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
